@@ -3,6 +3,9 @@ import { google, gmail_v1 } from "googleapis";
 import oauth2Client from "../../services/auth/oauth2Client";
 import getThreads from "../../services/gmail/Threads/getThreads";
 import getThread from "../../services/gmail/Threads/getThread";
+import sendMessage, {
+	IMessage,
+} from "../../services/gmail/Messages/sendMessage";
 
 const gmailRoute = express.Router();
 
@@ -39,6 +42,19 @@ gmailRoute.get("/:threadId", async (req, res) => {
 	const thread = await getThread(gmail, threadId);
 
 	res.send(thread);
+});
+
+gmailRoute.post("/send", async (req, res) => {
+	const gmail = req.body.gmail as gmail_v1.Gmail;
+
+	const requestBody = req.body as IMessage;
+	if (
+		!("subject" in requestBody && "text" in requestBody && "to" in requestBody)
+	)
+		return res.status(500).send("Invalid request body");
+
+	const sentMail = await sendMessage(gmail, requestBody);
+	res.send(sentMail);
 });
 
 export default gmailRoute;
